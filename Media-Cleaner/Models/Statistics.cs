@@ -1,20 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Media_Cleaner.Models
+﻿namespace MediaCleaner.Models
 {
     public class Statistics
     {
-        public int i;
-        public int inDB;
-        public int notInDB;
-        public Statistics()
-        {
-            i = 0;
-            inDB = 0;
-            notInDB = 0;
-        }
+        public int CurrentFileNumber { get; set; }
+
+        public int InDb { get; set; }
+
+        public int NotInDb { get; set; }
+
     }
 }

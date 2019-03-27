@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Media_Cleaner.Controllers;
 using System.Configuration;
 using System.IO;
+using MediaCleaner.Interfaces;
+using MediaCleaner.Models;
 
-namespace Media_Cleaner.Controllers.Tests
+namespace MediaCleaner.Services.Tests
 {
     [TestClass]
     public class FileHandlerTest
@@ -13,10 +14,13 @@ namespace Media_Cleaner.Controllers.Tests
         [TestMethod]
         public void BadMediaLocation()
         {
+
+            string badMediaLocation = ConfigurationManager.AppSettings["NonExistantFileDirectory"];
+            IDiscBasedMediaProvider discMedia = new DiscBasedMediaService(badMediaLocation);
+
             try
             {
-                string badMediaLocation = ConfigurationManager.AppSettings["NonExistantFileDirectory"];
-                HashSet<string> test = FileHandler.ScanMediaOnDisk(badMediaLocation);
+                CompareResult test = discMedia.CompareMedia(null, false);
             }
             catch (DirectoryNotFoundException)
             {
@@ -30,9 +34,12 @@ namespace Media_Cleaner.Controllers.Tests
         {
             try
             {
-                string GoodMediaLocation = ConfigurationManager.AppSettings["MediaLocationWithEndSlash"];
-                HashSet<string> test = FileHandler.ScanMediaOnDisk(GoodMediaLocation);
-                if (test.Count == 0)
+                string goodMediaLocation = ConfigurationManager.AppSettings["MediaLocationWithEndSlash"];
+                IDiscBasedMediaProvider discMedia = new DiscBasedMediaService(goodMediaLocation);
+
+                CompareResult test = discMedia.CompareMedia(new HashSet<string>(), false);
+
+                if (test.TotalFileCount == 0)
                 {
                     Assert.Fail("Double check Media Location is valid, HashSet is empty");
                 }
@@ -52,37 +59,41 @@ namespace Media_Cleaner.Controllers.Tests
         {
             try
             {
-                string GoodMediaLocation = ConfigurationManager.AppSettings["MediaLocationWithoutEndSlash"];
-                string GoodDBConnectionString = ConfigurationManager.AppSettings["GoodConnectionString"];
-                
-                HashSet<string> test = FileHandler.ScanMediaOnDisk(GoodMediaLocation);
-                if (test.Count == 0)
+                string goodMediaLocation = ConfigurationManager.AppSettings["MediaLocationWithoutEndSlash"];
+                string goodDBConnectionString = ConfigurationManager.AppSettings["GoodConnectionString"];
+
+
+                IDiscBasedMediaProvider discMedia = new DiscBasedMediaService(goodMediaLocation);
+                IDatabaseMediaProvider databaseMedia = new DatabaseMediaService(goodDBConnectionString);
+
+                CompareResult test = discMedia.CompareMedia(null, false);
+
+                if (test.TotalFileCount == 0)
                 {
                     Assert.Fail("Double check Media Location is valid, HashSet is empty");
                 }
 
-                HashSet<string> dbTest = DatabaseHandler.QueryDatabaseMedia(GoodDBConnectionString);
-
-
-
-                return;
+                ICollection<string> dbTest = databaseMedia.QueryMedia();
+                Assert.IsTrue(dbTest.Count > 0);
             }
             catch (DirectoryNotFoundException)
             {
                 Assert.Fail("Double check Media Location is valid");
             }
 
-
-
         }
 
         [TestMethod]
         public void NoMediaInDirectory()
         {
+            string badMediaLocation = ConfigurationManager.AppSettings["NonExistantFileDirectory"];
+            IDiscBasedMediaProvider discMedia = new DiscBasedMediaService(badMediaLocation);
+
             try
             {
-                string badMediaLocation = ConfigurationManager.AppSettings["MediaLocationWithoutMedia"];
-                HashSet<string> test = FileHandler.ScanMediaOnDisk(badMediaLocation);
+
+                CompareResult test = discMedia.CompareMedia(null, false);
+
             }
             catch (FileNotFoundException)
             {
