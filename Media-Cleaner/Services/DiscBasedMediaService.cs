@@ -101,18 +101,20 @@ namespace MediaCleaner.Services
                 Directory.CreateDirectory(depositFolder);
             }
 
-            //Remove any slashes at the end of the filename
+            //Remove any slashes at the beginning and end of the filename
+            //Path.Combine doesn't work if there are slashes on the beginning and end
             Regex removeBackSlashRegex = new Regex(@"\\*$");
+            Regex removeFrontSlashRegex = new Regex(@"^\\");
             sourcePath = removeBackSlashRegex.Replace(sourcePath, "");
+            depositFolder = removeBackSlashRegex.Replace(depositFolder, "");
 
             int fileCounter = 0;
             foreach (var mediaItem in deletedItems)
             {
                 fileCounter++;
                 Log.Info($"\r Moving media items {fileCounter} out of {deletedItems.Count}");
-
-                string source = Path.Combine(sourcePath, mediaItem);
-                string destination = Path.Combine(depositFolder, mediaItem);
+                string source = Path.Combine(sourcePath, removeFrontSlashRegex.Replace(mediaItem, ""));
+                string destination = Path.Combine(depositFolder, removeFrontSlashRegex.Replace(mediaItem, ""));
 
                 DirectoryInfo file = new DirectoryInfo(Path.GetDirectoryName(destination));
 
