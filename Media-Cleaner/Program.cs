@@ -1,45 +1,45 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Media_Cleaner.Controllers;
-using Media_Cleaner.Models;
+using System.Reflection;
+using log4net;
+using MediaCleaner.Interfaces;
+using MediaCleaner.Models;
+using MediaCleaner.Services;
 
-
-namespace Media_Cleaner
+namespace MediaCleaner
 {
     internal class Program
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public static void Main(string[] args)
         {
-            log.Info("Program start ================");
-            bool performMove = ConfigurationManager.AppSettings["PerformMove"] == "true" || ConfigurationManager.AppSettings["PerformMove"] == "True";
-            bool showBadFilesOnly = ConfigurationManager.AppSettings["ShowBadFilesOnly"] == "true" || ConfigurationManager.AppSettings["ShowBadFilesOnly"] == "True";
-            string mediaLocation = ConfigurationManager.AppSettings["MediaLocation"];
+            Log.Info("Program start ================");
+
+            bool.TryParse(ConfigurationManager.AppSettings["PerformMove"], out bool performMove);
+            bool.TryParse(ConfigurationManager.AppSettings["ShowBadFilesOnly"], out bool showBadFilesOnly);
+
+            string mediaDirectory = ConfigurationManager.AppSettings["MediaLocation"];
             string connString = ConfigurationManager.AppSettings["ConnectionString"];
-            HashSet<string> physicalFiles = FileHandler.ScanMediaOnDisk(mediaLocation);
 
-            HashSet<string> filesInDb = DatabaseHandler.QueryDatabaseMedia(connString);
-            //Statistics object to store our statistics across functions
-            var statistics = new Statistics();
+            IDatabaseMediaProvider databaseMedia = new DatabaseMediaService(connString);
+            IDiscBasedMediaProvider discMedia = new DiscBasedMediaService(mediaDirectory);
 
-            List<string> deleteList = FileHandler.CompareMedia(filesInDb, physicalFiles, showBadFilesOnly, statistics);
+            ICollection<string> filesInDb = databaseMedia.QueryMedia(); 
+            CompareResult result = discMedia.CompareMedia(filesInDb, showBadFilesOnly);
 
             if (performMove)
             {
-                FileHandler.MoveMedia(deleteList);
+                string targetPath = ConfigurationManager.AppSettings["DropOffLocation"];
+                string sourcePath = ConfigurationManager.AppSettings["MediaLocation"];
+                discMedia.MoveMedia(result.DeleteList, sourcePath, targetPath);
             }
-            string result =
-                $"Stats: Out of {physicalFiles.Count} Physical files, {statistics.inDB} were found in DB, {statistics.notInDB} were found to be orphaned ";
-            log.Warn(result);
-            log.Info("Program end ================");
-            Console.WriteLine("\n Bye!");
+
+            Statistics statistics = result.Statistics;
+
+            Log.Warn($"Stats: Out of {result.TotalFileCount} Physical files, {statistics.InDb} were found in DB, {statistics.NotInDb} were found to be orphaned ");
+            Log.Info("Program end ================");
+            Log.Info("\n Bye!");
         }
     }
 }

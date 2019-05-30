@@ -51,8 +51,8 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\DatabaseHandlerTest.cs" />
-    <Compile Include="Controllers\FileHandlerTest.cs" />
+    <Compile Include="Services\DatabaseHandlerTest.cs" />
+    <Compile Include="Services\FileHandlerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

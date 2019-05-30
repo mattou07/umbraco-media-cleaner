@@ -47,10 +47,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\DatabaseHandler.cs" />
-    <Compile Include="Controllers\FileHandler.cs" />
+    <Compile Include="Interfaces\IDatabaseMediaProvider.cs" />
+    <Compile Include="Interfaces\IDiscBasedMediaProvider.cs" />
+    <Compile Include="Services\DatabaseMediaService.cs" />
+    <Compile Include="Services\DiscBasedMediaService.cs" />
+    <Compile Include="Models\CompareResult.cs" />
     <Compile Include="Models\Statistics.cs" />
-    <Compile Include="Models\UmbracoMediaObject.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -70,5 +72,6 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
